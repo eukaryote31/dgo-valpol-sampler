@@ -12,6 +12,7 @@ public class TestSampler {
 		// get sgf
 		ClassLoader classLoader = getClass().getClassLoader();
 		File file = new File(classLoader.getResource("test.sgf").getFile());
-		System.out.println(samp.sampleAll(file));
+		
+		samp.sampleAll(file);
 	}
 }

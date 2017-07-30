@@ -67,9 +67,7 @@ public class SamplerImpl implements Sampler {
 				if (pos == null)
 					continue;
 
-				System.out.println(pos);
 				ret.add(new TrainingCase(ban, komi, finalscore, player, pos));
-				System.out.println(ban);
 				ban = ban.placeStone(pos, player);
 			}
 
@@ -124,7 +122,6 @@ public class SamplerImpl implements Sampler {
 	}
 
 	private BoardPos parsePos(String posstr) {
-		System.out.println(posstr);
 
 		// bad string length!
 		if (posstr.length() != 2)
