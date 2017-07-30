@@ -2,6 +2,7 @@ package dgo.train;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -18,14 +19,16 @@ public class SamplerImpl implements Sampler {
 
 	@Override
 	public TrainingCase sample(Random rnd, File f) {
-		// TODO Auto-generated method stub
-		return null;
+		List<TrainingCase> cases = sampleAll(f);
+
+		return cases.get(rnd.nextInt(cases.size()));
 	}
 
 	@Override
 	public List<TrainingCase> sample(Random rnd, File f, int count) {
-		// TODO Auto-generated method stub
-		return null;
+		List<TrainingCase> cases = sampleAll(f);
+		Collections.shuffle(cases, rnd);
+		return cases.subList(0, count);
 	}
 
 	@Override
@@ -38,28 +41,28 @@ public class SamplerImpl implements Sampler {
 			double komi = getKomi(game);
 
 			double finalscore = getScore(game, komi);
-			
+
 			// iterate over moves
 			GameNode node = game.getRootNode();
 			Goban ban = Goban.emptyGoban();
-			
+
 			while ((node = node.getNextNode()) != null) {
 				byte player = Goban.BLACK;
 				String move = node.getProperty("B", null);
-				
+
 				// white player
 				if (move == null) {
 					player = Goban.WHITE;
 					move = node.getProperty("W", null);
 				}
-				
+
 				// no white property either?
 				// probably bad file
 				if (move == null)
 					return null;
-				
+
 				BoardPos pos = parsePos(move);
-				
+
 				// pass
 				if (pos == null)
 					continue;
@@ -80,13 +83,13 @@ public class SamplerImpl implements Sampler {
 
 		return ret;
 	}
-	
+
 	private double getScore(Game game, double komi) {
 
 		// parse result
 		String resstr = game.getProperty("RE");
 		String[] pts = StringUtils.split(resstr, "+", 2);
-		
+
 		double absamt;
 
 		if (pts[1].equals("R")) {
@@ -111,26 +114,26 @@ public class SamplerImpl implements Sampler {
 			// remove komi by biasing in black's direction
 			absamt += komi;
 		}
-		
+
 		return absamt;
-		
+
 	}
-	
+
 	private double getKomi(Game game) {
 		return Double.parseDouble(game.getProperty("KM"));
 	}
-	
+
 	private BoardPos parsePos(String posstr) {
 		System.out.println(posstr);
-		
+
 		// bad string length!
 		if (posstr.length() != 2)
 			return null;
-		
+
 		// shift position down to 0..18
 		int x = posstr.charAt(0) - 'a';
 		int y = posstr.charAt(1) - 'a';
-		
+
 		return BoardPos.of(x, y);
 	}
 
