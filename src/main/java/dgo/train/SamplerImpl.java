@@ -1,8 +1,6 @@
 package dgo.train;
 
-import java.awt.Point;
 import java.io.File;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -13,6 +11,7 @@ import com.toomasr.sgf4j.Sgf;
 import com.toomasr.sgf4j.parser.Game;
 import com.toomasr.sgf4j.parser.GameNode;
 
+import dgo.BoardPos;
 import dgo.goban.Goban;
 
 public class SamplerImpl implements Sampler {
@@ -36,39 +35,14 @@ public class SamplerImpl implements Sampler {
 			Game game = Sgf.createFromPath(f.toPath());
 
 			// parse komi
-			double komi = Double.parseDouble(game.getProperty("KM"));
+			double komi = getKomi(game);
 
-			// parse result
-			String resstr = game.getProperty("RE");
-			String[] pts = StringUtils.split(resstr, "+", 2);
-
-			double absamt;
-
-			if (pts[1].equals("R")) {
-				// match resignation, so we dont know the final score
-				// set absamt to something as a placeholder
-
-				absamt = Double.NaN;
-			} else {
-				// parse the number
-
-				absamt = Double.parseDouble(pts[1]);
-				if (pts[0].equals("B")) {
-					// black
-				} else if (pts[0].equals("W")) {
-					// white, we represent white wins as negative values
-					absamt *= -1;
-				} else {
-					// invalid!
-					return null;
-				}
-
-				// remove komi by biasing in black direction
-				absamt += komi;
-			}
-
+			double finalscore = getScore(game, komi);
+			
 			// iterate over moves
 			GameNode node = game.getRootNode();
+			Goban ban = Goban.emptyGoban();
+			
 			while ((node = node.getNextNode()) != null) {
 				byte player = Goban.BLACK;
 				String move = node.getProperty("B", null);
@@ -84,20 +58,71 @@ public class SamplerImpl implements Sampler {
 				if (move == null)
 					return null;
 				
-				Point pos = parsePos(move);
+				BoardPos pos = parsePos(move);
 				
-				// TODO: finish
+				// pass
+				if (pos == null)
+					continue;
+
+				System.out.println(pos);
+				ret.add(new TrainingCase(ban, komi, finalscore, player, pos));
+				System.out.println(ban);
+				ban = ban.placeStone(pos, player);
 			}
 
 		} catch (NumberFormatException e) {
 			// a number was wrong somewhere!
+			return null;
+		} catch (IllegalArgumentException e) {
+			// malformed sgf!
 			return null;
 		}
 
 		return ret;
 	}
 	
-	private Point parsePos(String posstr) {
+	private double getScore(Game game, double komi) {
+
+		// parse result
+		String resstr = game.getProperty("RE");
+		String[] pts = StringUtils.split(resstr, "+", 2);
+		
+		double absamt;
+
+		if (pts[1].equals("R")) {
+			// match resignation, so we dont know the final score
+			// set absamt to something as a placeholder
+
+			absamt = Double.NaN;
+		} else {
+			// parse the number
+
+			absamt = Double.parseDouble(pts[1]);
+			if (pts[0].equals("B")) {
+				// black
+			} else if (pts[0].equals("W")) {
+				// white, we represent white's wins as negative values
+				absamt *= -1;
+			} else {
+				// invalid!
+				throw new IllegalArgumentException();
+			}
+
+			// remove komi by biasing in black's direction
+			absamt += komi;
+		}
+		
+		return absamt;
+		
+	}
+	
+	private double getKomi(Game game) {
+		return Double.parseDouble(game.getProperty("KM"));
+	}
+	
+	private BoardPos parsePos(String posstr) {
+		System.out.println(posstr);
+		
 		// bad string length!
 		if (posstr.length() != 2)
 			return null;
@@ -106,7 +131,7 @@ public class SamplerImpl implements Sampler {
 		int x = posstr.charAt(0) - 'a';
 		int y = posstr.charAt(1) - 'a';
 		
-		return new Point(x, y);
+		return BoardPos.of(x, y);
 	}
 
 }

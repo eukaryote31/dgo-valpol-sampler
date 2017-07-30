@@ -19,7 +19,7 @@ repositories {
 dependencies {
     compile 'org.slf4j:slf4j-api:1.7.21'
     compile 'org.apache.commons:commons-lang3:3.1'
-	compile 'com.github.eukaryote31:dgo-common:v0.1'
+	compile 'com.github.eukaryote31:dgo-common:v0.2.1'
 	compile 'com.github.toomasr:sgf4j:3cb6632'
 
     compileOnly 'org.projectlombok:lombok:1.16.16'	

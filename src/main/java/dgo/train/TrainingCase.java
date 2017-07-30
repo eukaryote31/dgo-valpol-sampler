@@ -2,6 +2,7 @@ package dgo.train;
 
 import java.awt.Point;
 
+import dgo.BoardPos;
 import dgo.goban.Goban;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,5 +18,5 @@ public class TrainingCase {
 	
 	private byte player;
 	
-	private Point next;
+	private BoardPos next;
 }
